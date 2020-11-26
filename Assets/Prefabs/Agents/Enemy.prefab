@@ -925,7 +925,7 @@ MonoBehaviour:
   hitPointTransform: {fileID: 1334792499861299805}
   thisObjectSide: 1
   maxHitDistance: 100
-  rotationSpeed: 150
+  rotationSpeed: 20
   playerMeshRenderer: {fileID: 1334792498400281389}
   standardShader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
   hitShader: {fileID: -6465566751694194690, guid: 6d7234ecb528c454ba499b274049922c,

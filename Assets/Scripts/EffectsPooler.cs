@@ -40,26 +40,11 @@ public class EffectsPooler : MonoBehaviour
         }
 
     }
-    private void AddNewInFrontOfQueue(string tag)
-    {
-        foreach (var item in pools)
-        {
-            if(item.tag == tag)
-            {
-                List<GameObject> tempAddition = new List<GameObject>();
-                tempAddition.Add(Instantiate(item.prefab));
-                tempAddition[0].SetActive(false);
-                tempAddition.Concat(effectsDictionary[tag]);
-                effectsDictionary[tag]= new Queue<GameObject>(tempAddition);
-                break;
-            }
-        }
-    }
+    
     public GameObject SpawnFromDictionary(string tag, Vector3 position, Quaternion rotation)
     {
-        if(effectsDictionary[tag].First().activeInHierarchy)
-        {
-            AddNewInFrontOfQueue(tag);
+      
+            
             GameObject objectToSpawn = effectsDictionary[tag].Dequeue();
             objectToSpawn.SetActive(true);
             objectToSpawn.transform.position = position;
@@ -67,17 +52,7 @@ public class EffectsPooler : MonoBehaviour
             objectToSpawn.GetComponent<IPooledObject>().OnObjectPooled();
             effectsDictionary[tag].Enqueue(objectToSpawn);
             return objectToSpawn;
-        }
-        else
-        {
-            GameObject objectToSpawn = effectsDictionary[tag].Dequeue();
-            objectToSpawn.SetActive(true);
-            objectToSpawn.transform.position = position;
-            objectToSpawn.transform.rotation = rotation;
-            objectToSpawn.GetComponent<IPooledObject>().OnObjectPooled();
-            effectsDictionary[tag].Enqueue(objectToSpawn);
-            return objectToSpawn;
-        }
+        
     }
 
    

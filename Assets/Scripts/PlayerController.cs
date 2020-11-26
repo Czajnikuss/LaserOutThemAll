@@ -21,7 +21,7 @@ public class PlayerController : MonoBehaviour, IHitable
   
     private List<Vector3> rayHitPointsList;
     
-    public Side side {get {return thisObjectSide;} set {thisObjectSide = value;} }
+    public Side side {get {return this.thisObjectSide;} set {this.thisObjectSide = value;} }
     [SerializeField] private Side thisObjectSide;
  
     [Tooltip("maximim distance to with we are checking for colision")]
@@ -33,7 +33,7 @@ public class PlayerController : MonoBehaviour, IHitable
     [SerializeField] SkinnedMeshRenderer playerMeshRenderer;
     [SerializeField] Shader standardShader, hitShader, damageShader;
     Animator animator;
-    float clickTimer, cliclInterval = 0.2f;
+    
     void Awake ()  
     {  
           
@@ -42,18 +42,21 @@ public class PlayerController : MonoBehaviour, IHitable
         animator = this.GetComponent<Animator>();
     }  
     private void Start() 
-    {
-        //let us show begining ray so player know what we are doing
-        StartARay();
+    {   
+        PlayManager.Instance.Fire.AddListener(FireThisUpdate);
+        PlayManager.Instance.MoveLeft.AddListener(MovingLeft);
+        PlayManager.Instance.MoveRight.AddListener(MovingRight);
+        
+        
         side =  thisObjectSide;
         
     }
     private void Update() 
     {
-        clickTimer += Time.deltaTime;
+        
         //I'll define platform specyfic method of this name to efficiently use touch input and easly test in editor
         //In it we are changing Player rotation acording to mouse of touch movement
-        Movement();
+        //Movement();
         StartARay();
         
     }
@@ -69,11 +72,13 @@ public class PlayerController : MonoBehaviour, IHitable
             }
             playerMeshRenderer.materials[0].shader = hitShader;
             isBeeingHit = false;
+            
         }
         else
         {
             playerMeshRenderer.materials[0].shader = standardShader;
         }
+        fire = false;
         
     }
     
@@ -83,9 +88,22 @@ public class PlayerController : MonoBehaviour, IHitable
     }    
     public void Damage()
     {
-        Debug.Log("damage" + this.gameObject);
         StartCoroutine(DamageWithDisable());
     }
+    public void FireThisUpdate()
+    {
+    
+        fire = true;
+    }
+    public void MovingLeft()
+    {
+        transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+    }
+    public void MovingRight()
+    {
+        transform.Rotate(Vector3.up, -rotationSpeed * Time.deltaTime);
+    }
+
     private IEnumerator DamageWithDisable()
     {
         playerMeshRenderer.materials[0].shader = damageShader;
@@ -93,7 +111,15 @@ public class PlayerController : MonoBehaviour, IHitable
         animator.Play("TakeDamage");
         yield return new WaitForSeconds(1);
         PlayManager.Instance.hitablesList.Remove(this);
-        PlayManager.Instance.CheckWinLose();
+        if(side==Side.Player)
+        {
+            PlayManager.Instance.Lose();
+        }
+        else
+        {
+            PlayManager.Instance.CheckWinLose();
+        }
+        
         this.gameObject.SetActive(false);
 
     }
@@ -117,7 +143,8 @@ public class PlayerController : MonoBehaviour, IHitable
         //we hit something
         if(Physics.Raycast(start,direction, out rayHit, maxHitDistance) )
         {
-            reflectable = rayHit.collider.GetComponent<IReflectable>();
+            
+            rayHit.collider.TryGetComponent<IReflectable>(out reflectable);
             if(reflectable!= null)
             {
                 reflectable.Reflect(rayHit.point, rayHit.normal);
@@ -126,7 +153,7 @@ public class PlayerController : MonoBehaviour, IHitable
                 inDirection = Vector3.Reflect(rayHit.point-start, rayHit.normal); 
                 ShootARay(rayHit.point, inDirection, maxHitDistance);
             }
-            hitable = rayHit.collider.GetComponent<IHitable>();
+            rayHit.collider.TryGetComponent<IHitable>(out hitable);
             if(hitable != null)
             {
                 rayHitPointsList.Add(rayHit.point);
@@ -158,29 +185,21 @@ public class PlayerController : MonoBehaviour, IHitable
 #endregion 
 
 #region Player Movement
-#if UNITY_EDITOR
+/*#if UNITY_EDITOR
 private void Movement() 
 {
     if(Input.GetMouseButton(0))
     {
     transform.Rotate(0, (Input.GetAxis("Mouse X") * rotationSpeed * Time.deltaTime), 0, Space.World);
     }
-    if(Input.GetMouseButtonDown(0))
-    {
-        clickTimer = 0;
-    }
-    if(Input.GetMouseButtonUp(0) && clickTimer< cliclInterval)
-    {
-        fire = true;
-    }
+    
 }
-
-#elif UNITY_ANDROID
+//#endif 
+/*#if UNITY_ANDROID
 Touch touch;
 float startingPosition;
 private void Movement() 
 {
-//todo: add click
     if(Input.touchCount>0)
     {
         switch (touch.phase)
@@ -204,7 +223,7 @@ private void Movement()
         }
     }
 }
-#endif
+#endif */
 #endregion
 
 }

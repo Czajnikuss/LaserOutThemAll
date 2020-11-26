@@ -40,7 +40,7 @@
             "typeInfo": {
                 "fullName": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty"
             },
-            "JSONnodeData": "{\n    \"m_Guid\": {\n        \"m_GuidSerialized\": \"4cff35a7-ab86-4fec-9d25-66458200d3b3\"\n    },\n    \"m_Name\": \"DisolveAmount\",\n    \"m_DefaultReferenceName\": \"Vector1_778B6D23\",\n    \"m_OverrideReferenceName\": \"DisolveAmount\",\n    \"m_GeneratePropertyBlock\": true,\n    \"m_Precision\": 0,\n    \"m_GPUInstanced\": false,\n    \"m_Hidden\": false,\n    \"m_Value\": 0.6000000238418579,\n    \"m_FloatType\": 0,\n    \"m_RangeValues\": {\n        \"x\": 0.0,\n        \"y\": 1.2699999809265137\n    }\n}"
+            "JSONnodeData": "{\n    \"m_Guid\": {\n        \"m_GuidSerialized\": \"4cff35a7-ab86-4fec-9d25-66458200d3b3\"\n    },\n    \"m_Name\": \"DisolveAmount\",\n    \"m_DefaultReferenceName\": \"Vector1_778B6D23\",\n    \"m_OverrideReferenceName\": \"DisolveAmount\",\n    \"m_GeneratePropertyBlock\": true,\n    \"m_Precision\": 0,\n    \"m_GPUInstanced\": false,\n    \"m_Hidden\": false,\n    \"m_Value\": 0.5,\n    \"m_FloatType\": 0,\n    \"m_RangeValues\": {\n        \"x\": 0.0,\n        \"y\": 1.2699999809265137\n    }\n}"
         }
     ],
     "m_SerializedKeywords": [],
@@ -208,7 +208,7 @@
     ],
     "m_PreviewData": {
         "serializedMesh": {
-            "m_SerializedMesh": "{\"mesh\":{\"instanceID\":0}}",
+            "m_SerializedMesh": "{\"mesh\":{\"fileID\":4300000,\"guid\":\"a1d8b3ce70b980645b4aa1e32dfe6e9d\",\"type\":3}}",
             "m_Guid": ""
         }
     },
