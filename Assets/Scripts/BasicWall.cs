@@ -12,7 +12,5 @@ public class BasicWall : MonoBehaviour, IReflectable
        sparks = EffectsPooler.Instance.SpawnFromDictionary("sparks",reflectPoint,rot);
        sparks.gameObject.SetActive(true);
        
-       Debug.Log(reflectionNormal);
-       
    }
 }

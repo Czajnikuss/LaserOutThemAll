@@ -1,5 +1,15 @@
 ﻿using UnityEngine;
 public interface IHitable 
 {
-    void Hit(Vector3 hitPoint);
+    void Hit();
+    void Damage();
+    Side side {get; set;}
+   
 }
+public enum Side
+{
+    Player,
+    Enemy, 
+    Neutral
+}
+

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 [RequireComponent(typeof (LineRenderer))]
 public class PlayerController : MonoBehaviour, IHitable
@@ -11,61 +12,97 @@ public class PlayerController : MonoBehaviour, IHitable
     private LineRenderer lineRenderer; 
 
     //a RaycastHit variable, to gather informartion about the ray's collision  
-    private RaycastHit hit;  
-    private bool isBeeingHit, markForHit;
-    private Color startColor;
+    private RaycastHit rayHit;  
+    private bool isBeeingHit, fire;
+    
   
     //reflection direction  
     private Vector3 inDirection;  
   
-    private List<Vector3> hitPointsList;
-  
+    private List<Vector3> rayHitPointsList;
+    
+    public Side side {get {return thisObjectSide;} set {thisObjectSide = value;} }
+    [SerializeField] private Side thisObjectSide;
+ 
     [Tooltip("maximim distance to with we are checking for colision")]
     [SerializeField] private float maxHitDistance = 100f;  
     
 
     [SerializeField] float rotationSpeed;
-    MeshRenderer meshRenderer;
-    [SerializeField] Material standardMateril, redTintMaterial;
+    
+    [SerializeField] SkinnedMeshRenderer playerMeshRenderer;
+    [SerializeField] Shader standardShader, hitShader, damageShader;
+    Animator animator;
+    float clickTimer, cliclInterval = 0.2f;
     void Awake ()  
     {  
           
         //get the attached LineRenderer component  
         lineRenderer = this.GetComponent<LineRenderer>();  
-        meshRenderer = GetComponent<MeshRenderer>();
+        animator = this.GetComponent<Animator>();
     }  
     private void Start() 
     {
         //let us show begining ray so player know what we are doing
         StartARay();
-        markForHit=false;
+        side =  thisObjectSide;
+        
     }
     private void Update() 
     {
-        
+        clickTimer += Time.deltaTime;
         //I'll define platform specyfic method of this name to efficiently use touch input and easly test in editor
         //In it we are changing Player rotation acording to mouse of touch movement
         Movement();
+        StartARay();
         
     }
-    private void LateUpdate() {
-            if(!isBeeingHit&& !markForHit)meshRenderer.material = standardMateril;
-    
+    void LateUpdate()
+    {
+        
+        if(isBeeingHit)
+        {
+            if(fire)
+            {
+                fire=false;
+                Damage();
+            }
+            playerMeshRenderer.materials[0].shader = hitShader;
+            isBeeingHit = false;
+        }
+        else
+        {
+            playerMeshRenderer.materials[0].shader = standardShader;
+        }
+        
     }
-    public void Hit(Vector3 hitPoint)
+    
+    public void Hit()
     {
         isBeeingHit = true;
-        markForHit = true;
-        meshRenderer.material= redTintMaterial;
+    }    
+    public void Damage()
+    {
+        Debug.Log("damage" + this.gameObject);
+        StartCoroutine(DamageWithDisable());
     }
+    private IEnumerator DamageWithDisable()
+    {
+        playerMeshRenderer.materials[0].shader = damageShader;
+        playerMeshRenderer.materials[1].shader = damageShader;
+        animator.Play("TakeDamage");
+        yield return new WaitForSeconds(1);
+        PlayManager.Instance.hitablesList.Remove(this);
+        PlayManager.Instance.CheckWinLose();
+        this.gameObject.SetActive(false);
 
+    }
+     
 #region Ray
 //starting a new ray, need to clean list and give first vector.
-    private void StartARay() {
-        isBeeingHit = false;
-        
-
-        hitPointsList = new List<Vector3>();
+    private void StartARay() 
+    {
+        rayHitPointsList = new List<Vector3>();
         ShootARay(hitPointTransform.position, hitPointTransform.forward, maxHitDistance);
     }
     
@@ -76,42 +113,43 @@ public class PlayerController : MonoBehaviour, IHitable
         IReflectable reflectable;
         IHitable hitable;
         //this is called only when there is something to add, so let's add.
-        hitPointsList.Add(start);
+        rayHitPointsList.Add(start);
         //we hit something
-        if(Physics.Raycast(start,direction, out hit, maxHitDistance) )
+        if(Physics.Raycast(start,direction, out rayHit, maxHitDistance) )
         {
-            reflectable = hit.collider.GetComponent<IReflectable>();
+            reflectable = rayHit.collider.GetComponent<IReflectable>();
             if(reflectable!= null)
             {
-                reflectable.Reflect(hit.point, hit.normal);
-            //configure next possible ray
-            inDirection = Vector3.Reflect(hit.point-start, hit.normal); 
-            ShootARay(hit.point, inDirection, maxHitDistance);
+                reflectable.Reflect(rayHit.point, rayHit.normal);
+                
+                //configure next possible ray
+                inDirection = Vector3.Reflect(rayHit.point-start, rayHit.normal); 
+                ShootARay(rayHit.point, inDirection, maxHitDistance);
             }
-            hitable = hit.collider.GetComponent<IHitable>();
+            hitable = rayHit.collider.GetComponent<IHitable>();
             if(hitable != null)
             {
-                hitPointsList.Add(hit.point);
-                lineRenderer.positionCount = hitPointsList.Count;
-                lineRenderer.SetPositions(hitPointsList.ToArray());
+                rayHitPointsList.Add(rayHit.point);
+                lineRenderer.positionCount = rayHitPointsList.Count;
+                lineRenderer.SetPositions(rayHitPointsList.ToArray());
                 
-                hitable.Hit(hit.point);
+                hitable.Hit();
             }
         }
         else
         {
-            //no collision problem
-            if(hitPointsList.Count<2)
+            //no collision, so we draw line to max lenght as last element
+            if(rayHitPointsList.Count<2)
                 {
-                    hitPointsList.Add(direction * maxHitDistance);
-                    lineRenderer.positionCount = hitPointsList.Count;
-                    lineRenderer.SetPositions(hitPointsList.ToArray());
+                    rayHitPointsList.Add(direction * maxHitDistance);
+                    lineRenderer.positionCount = rayHitPointsList.Count;
+                    lineRenderer.SetPositions(rayHitPointsList.ToArray());
                 }
             else
                 {
-                    hitPointsList.Add(inDirection * maxHitDistance);
-                    lineRenderer.positionCount = hitPointsList.Count;
-                    lineRenderer.SetPositions(hitPointsList.ToArray());
+                    rayHitPointsList.Add(inDirection * maxHitDistance);
+                    lineRenderer.positionCount = rayHitPointsList.Count;
+                    lineRenderer.SetPositions(rayHitPointsList.ToArray());
                 }
         }
         
@@ -126,7 +164,14 @@ private void Movement()
     if(Input.GetMouseButton(0))
     {
     transform.Rotate(0, (Input.GetAxis("Mouse X") * rotationSpeed * Time.deltaTime), 0, Space.World);
-    StartARay();
+    }
+    if(Input.GetMouseButtonDown(0))
+    {
+        clickTimer = 0;
+    }
+    if(Input.GetMouseButtonUp(0) && clickTimer< cliclInterval)
+    {
+        fire = true;
     }
 }
 
@@ -135,6 +180,7 @@ Touch touch;
 float startingPosition;
 private void Movement() 
 {
+//todo: add click
     if(Input.touchCount>0)
     {
         switch (touch.phase)
@@ -156,7 +202,6 @@ private void Movement()
                 Debug.Log("Touch Phase Ended.");
                 break;
         }
-    StartARay();
     }
 }
 #endif
