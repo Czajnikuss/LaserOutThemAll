@@ -37,12 +37,13 @@ public class PlayerController : MonoBehaviour, IHitable
     void Awake ()  
     {  
           
-        //get the attached LineRenderer component  
+        //varialbles initiation  
         lineRenderer = this.GetComponent<LineRenderer>();  
         animator = this.GetComponent<Animator>();
     }  
     private void Start() 
     {   
+        //signing to input related events
         PlayManager.Instance.Fire.AddListener(FireThisUpdate);
         PlayManager.Instance.MoveLeft.AddListener(MovingLeft);
         PlayManager.Instance.MoveRight.AddListener(MovingRight);
@@ -54,13 +55,11 @@ public class PlayerController : MonoBehaviour, IHitable
     private void Update() 
     {
         
-        //I'll define platform specyfic method of this name to efficiently use touch input and easly test in editor
-        //In it we are changing Player rotation acording to mouse of touch movement
-        //Movement();
         StartARay();
         
     }
-    void LateUpdate()
+    //we will check for markings during Update and execute acrodingly
+    private void LateUpdate()
     {
         
         if(isBeeingHit)
@@ -81,20 +80,23 @@ public class PlayerController : MonoBehaviour, IHitable
         fire = false;
         
     }
-    
+    //mark this object as hit 
     public void Hit()
     {
         isBeeingHit = true;
-    }    
+    }
+    //start a death sequence    
     public void Damage()
     {
         StartCoroutine(DamageWithDisable());
     }
+    // did player shoot in this update, if so and this objec was marked as hit we will initiate in late Update a death sequence
     public void FireThisUpdate()
     {
     
         fire = true;
     }
+    //moves trigerred by events
     public void MovingLeft()
     {
         transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
@@ -106,11 +108,16 @@ public class PlayerController : MonoBehaviour, IHitable
 
     private IEnumerator DamageWithDisable()
     {
+        //changing shader to disolve
         playerMeshRenderer.materials[0].shader = damageShader;
         playerMeshRenderer.materials[1].shader = damageShader;
+        //and start death (disolve) animation
         animator.Play("TakeDamage");
+        //let it play for 1 sec
         yield return new WaitForSeconds(1);
+        //lets inform PlayManager of this object death 
         PlayManager.Instance.hitablesList.Remove(this);
+        //we can't lose any players so game is lost if this object was on Player side
         if(side==Side.Player)
         {
             PlayManager.Instance.Lose();
@@ -133,7 +140,7 @@ public class PlayerController : MonoBehaviour, IHitable
     }
     
 
-    
+    //we are constructing separate parts of reflected ray
     private void ShootARay(Vector3 start, Vector3 direction, float maxLeanght)
     {
         IReflectable reflectable;
@@ -184,7 +191,7 @@ public class PlayerController : MonoBehaviour, IHitable
     }
 #endregion 
 
-#region Player Movement
+#region Player Movement (moved to events so only one check a frame)
 /*#if UNITY_EDITOR
 private void Movement() 
 {

@@ -10,7 +10,7 @@ public class PlayManager : MonoBehaviour
     
     public static PlayManager Instance;
     public List<IHitable> hitablesList;
-    public List<IReflectable> reflectableList;
+    
     float clickTimer, clickInterval = 0.2f;
     public UnityEvent Fire, MoveLeft, MoveRight;
     private Vector3 mouseStartPos;
@@ -20,10 +20,13 @@ public class PlayManager : MonoBehaviour
 
     private void Awake() {
         Instance = this;
-        FillInterfacesLists(); 
+        //variable initialization
+        hitablesList = FindObjectsOfType<MonoBehaviour>().OfType<IHitable>().ToList();
+        Time.timeScale = 1;
     }
     private void Update() 
     {
+        //lets check for desired input and fire related events
         clickTimer += Time.deltaTime;
         if(Input.GetMouseButtonDown(0))
         {
@@ -60,23 +63,21 @@ public class PlayManager : MonoBehaviour
         Win();
         gotEnemy:;
     }
+    //as of now only log info, in future there should be sone screens 
     public void Lose()
     {
         Debug.Log("Sorry, try next time");
+        Time.timeScale = 0;
     }
     public void Win()
     {
         Debug.Log("Won!!!!");
+        Time.timeScale = 0;
     }
     
-    private void FillInterfacesLists()
-    {
-        hitablesList = FindObjectsOfType<MonoBehaviour>().OfType<IHitable>().ToList();
-        reflectableList = FindObjectsOfType<MonoBehaviour>().OfType<IReflectable>().ToList();
-       
-    }
     public void RestartThisLevel()
     {
+        Time.timeScale = 1;
         Scene scene = SceneManager.GetActiveScene(); 
         SceneManager.LoadScene(scene.name);
     }
